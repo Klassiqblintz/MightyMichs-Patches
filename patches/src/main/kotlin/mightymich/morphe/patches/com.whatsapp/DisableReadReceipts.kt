@@ -4,6 +4,9 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.booleanOption
+import app.morphe.patcher.patch.classDefForEach
+import app.morphe.patcher.patch.mutableClassDefBy
+import com.android.tools.smali.dexlib2.iface.ClassDef
 
 @Suppress("unused")
 val disableReadReceiptsPatch = bytecodePatch(
@@ -75,8 +78,8 @@ val disableReadReceiptsPatch = bytecodePatch(
         // Phase 2: Heuristic bytecode scan — search ALL classes for methods
         // that contain "receipt" in their bytecode and return void
         if (hits == 0) {
-            try {
-                @phase2 classDefForEach { classDef: ClassDef ->
+            try@phase2 {
+                classDefForEach { classDef: ClassDef ->
                     val type = classDef.type
                     // Only patch WhatsApp's own classes
                     if (type.contains("com.whatsapp") || type.contains("whatsapp")) {
@@ -119,8 +122,8 @@ val disableReadReceiptsPatch = bytecodePatch(
 
         // Phase 3: Method name pattern scan — find methods with "Receipt"/"read" in name
         if (hits == 0) {
-            try {
-                @phase3 classDefForEach { classDef: ClassDef ->
+            try@phase3 {
+                classDefForEach { classDef: ClassDef ->
                     val mutableClass = mutableClassDefBy(classDef)
                     for (method in mutableClass.methods) {
                         val name = method.name.lowercase()
