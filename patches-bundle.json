@@ -1,6 +1,6 @@
 {
   "created_at": "2026-11-12T16:55:00",
-  "description": "## 1.15.0 (2026-11-12)\n\n### 🐛 Bug Fixes\n\n* **whatsapp:** Add 2 fallback search phases to KeepDeletedMessages patch for WhatsApp 2.26.43.75 — Phase 2 scans ALL classes for heuristic bytecode markers, Phase 3 scans for method name patterns. Fixes \"no delete-for-everyone / revoke handler matched\" error.\n\n### ✨ New Features\n\n* **whatsapp:** App icon can load PNG from phone storage",
+  "description": "## [1.15.0](https://github.com/Klassiqblintz/MightyMichs-Patches/compare/v1.14.0...v1.15.0) (2026-11-12)\n\n### 🐛 Bug Fixes\n\n* **whatsapp:** Add 2 fallback search phases to KeepDeletedMessages patch for WhatsApp 2.26.43.75 — Phase 2 scans ALL classes for heuristic bytecode markers, Phase 3 scans for method name patterns. Fixes \"no delete-for-everyone / revoke handler matched\" error. ([cc986b1](https://github.com/Klassiqblintz/MightyMichs-Patches/commit/cc986b11402fed4f5143609985fd58ab4399759a))\n\n### ✨ New Features\n\n* **whatsapp:** App icon can load PNG from phone storage",
   "download_url": "https://github.com/mich111discord/MightyMichs-Patches/releases/download/v1.14.0/patches-1.14.0.mpp",
   "signature_download_url": "",
   "version": "1.14.0"
