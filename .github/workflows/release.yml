@@ -37,8 +37,10 @@ jobs:
       # Semantic release runs its own Gradle build command.
       # Only dev and main branch will generate a release as specified by .releaserc
       - name: Release
-        uses: cycjimmy/semantic-release-action@v6
         id: release
+        run: |
+          DEBUG=semantic-release* npx semantic-release --branches main 2>&1 | tee /tmp/sr.log
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
