@@ -82,7 +82,7 @@ val disableReadReceiptsPatch = bytecodePatch(
                     val mutableClass = try {
                         mutableClassDefBy(classDef)
                     } catch (_: Exception) {
-                        return@classDefForEach
+                        return@findInAllClasses
                     }
                     for (method in mutableClass.methods) {
                         if (method.returnType != "V") continue
@@ -126,7 +126,7 @@ val disableReadReceiptsPatch = bytecodePatch(
                 val mutableClass = try {
                     mutableClassDefBy(classDef)
                 } catch (_: Exception) {
-                    return@classDefForEach
+                    return@findInAllClasses2
                 }
                 for (method in mutableClass.methods) {
                     val name = method.name.lowercase()
