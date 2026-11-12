@@ -37,7 +37,7 @@ fun main() {
 }
 
 @Suppress("DEPRECATION")
-private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
+private fun generatePatchList(version: String, patches: Set<Patch>) {
     val listJson = File("../patches-list.json")
 
     val patchesMap = patches.sortedBy { it.name }.map { patch ->
@@ -47,15 +47,12 @@ private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
             default = patch.default,
             category = patch.category,
             dependencies = patch.dependencies.map { it.javaClass.simpleName },
-            // Map each Compatibility to a JsonCompatibility object with full metadata.
-            // Patches with null compatiblePackages are universal (apply to any app).
             compatiblePackages = patch.compatibility?.map { compat ->
                 JsonCompatibility(
                     packageName = compat.packageName!!,
                     name = compat.name,
                     description = compat.description,
                     apkFileType = compat.apkFileType?.name,
-                    // Format as #RRGGBB string for readability; null if not set
                     appIconColor = compat.appIconColor?.let { "#%06X".format(it) },
                     signatures = compat.signatures,
                     targets = compat.targets.map { target ->
@@ -69,15 +66,15 @@ private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
                     },
                 )
             },
-            options = patch.options.values.map { option ->
+            options = patch.options.values.map { (_, option) ->
                 JsonPatch.Option(
                     key = option.key,
                     title = option.title,
                     description = option.description,
                     required = option.required,
-                    type = option.type.toString(),
+                    type = option.type.classifier?.simpleName ?: option.type.toString(),
                     default = option.default,
-                    values = option.values,
+                    values = option.values?.mapValues { (_, v) -> v },
                 )
             }
         )
