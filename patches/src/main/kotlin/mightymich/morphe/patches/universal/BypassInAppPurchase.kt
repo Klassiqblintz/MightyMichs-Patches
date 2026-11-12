@@ -27,7 +27,7 @@ val bypassInAppPurchasePatch = bytecodePatch(
     description = "Best-effort local Play Billing bypass for offline games " +
         "(Purchase state = PURCHASED, acknowledged = true). " +
         "Does not defeat server-side validation.",
-    default = true
+    default = false
 ) {
     // Purchase.getPurchaseState()I  — returns 0 UNSPECIFIED, 1 PURCHASED, 2 PENDING
     val purchaseStateFingerprint = Fingerprint(
