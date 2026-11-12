@@ -4,6 +4,9 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.booleanOption
+import app.morphe.patcher.patch.classDefBy
+import app.morphe.patcher.patch.classDefForEach
+import app.morphe.patcher.patch.mutableClassDefBy
 
 /**
  * Prevents "Delete for everyone" from wiping local message text.
@@ -15,9 +18,9 @@ import app.morphe.patcher.patch.booleanOption
  *           This is the FAST path that works on most WhatsApp versions.
  *
  *   Phase 2: Broad-scan fallback — iterates ALL classes in ALL DEX
- *           files, skips resource/config classes, and looks for void
- *           methods (< 60 instructions) containing heuristic markers
- *           like "delete", "revok", "setDeleted", "markAsDeleted", etc.
+ *           files (classDefForEach), skips resource/config classes, and
+ *           looks for void methods (< 60 instructions) containing
+ *           heuristic markers like "delete", "revok", "setDeleted", etc.
  *
  *   Phase 3: Name-pattern fallback — searches ALL classes for void
  *           methods whose names contain setDeleted/markDeleted/wipe/
@@ -91,7 +94,6 @@ val keepDeletedMessagesPatch = bytecodePatch(
         // PHASE 2 — Broad-scan fallback for all classes in all DEX files
         // ================================================================
         if (hits == 0) {
-            val allDefs = allClassDefs()
             val heuristicMarkers = listOf(
                 "delete",
                 "revok",
@@ -101,11 +103,11 @@ val keepDeletedMessagesPatch = bytecodePatch(
                 "clearMessage",
             )
 
-            for (def in allDefs) {
+            classDefForEach { def ->
                 val clazz = try {
                     mutableClassDefBy(def)
                 } catch (_: Exception) {
-                    continue
+                    return@classDefForEach
                 }
 
                 val className = clazz.type
@@ -114,7 +116,7 @@ val keepDeletedMessagesPatch = bytecodePatch(
                     className.contains("BuildConfig") ||
                     className.contains("Compat")
                 ) {
-                    continue
+                    return@classDefForEach
                 }
 
                 for (method in clazz.methods) {
@@ -140,7 +142,7 @@ val keepDeletedMessagesPatch = bytecodePatch(
                         hits++
                     } catch (_: Exception) {}
                 }
-                if (hits > 0) break
+                if (hits > 0) return@classDefForEach
             }
         }
 
@@ -156,12 +158,11 @@ val keepDeletedMessagesPatch = bytecodePatch(
                 "clearMessage",
                 "deleteMessage",
             )
-            val allDefs = allClassDefs()
-            for (def in allDefs) {
+            classDefForEach { def ->
                 val clazz = try {
                     mutableClassDefBy(def)
                 } catch (_: Exception) {
-                    continue
+                    return@classDefForEach
                 }
 
                 for (method in clazz.methods) {
@@ -185,7 +186,7 @@ val keepDeletedMessagesPatch = bytecodePatch(
                         hits++
                     } catch (_: Exception) {}
                 }
-                if (hits > 0) break
+                if (hits > 0) return@classDefForEach
             }
         }
 
