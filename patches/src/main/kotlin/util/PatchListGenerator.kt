@@ -72,7 +72,7 @@ private fun generatePatchList(version: String, patches: Set<Patch>) {
                     title = option.title,
                     description = option.description,
                     required = option.required,
-                    type = option.type.classifier?.simpleName ?: option.type.toString(),
+                    type = option.type.toString(),
                     default = option.default,
                     values = option.values?.mapValues { (_, v) -> v },
                 )
