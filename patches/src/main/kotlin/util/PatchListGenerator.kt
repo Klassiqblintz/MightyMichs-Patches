@@ -66,9 +66,9 @@ private fun generatePatchList(version: String, patches: Set<Patch>) {
                     },
                 )
             },
-            options = patch.options.values.map { (_, option) ->
+            options = patch.options.entries.map { (key, option) ->
                 JsonPatch.Option(
-                    key = option.key,
+                    key = key,
                     title = option.title,
                     description = option.description,
                     required = option.required,
