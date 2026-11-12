@@ -76,7 +76,7 @@ val disableReadReceiptsPatch = bytecodePatch(
         // that contain "receipt" in their bytecode and return void
         if (hits == 0) {
             try {
-                classDefForEach { classDef ->
+                classDefForEach@ { classDef ->
                     val type = classDef.type
                     // Only patch WhatsApp's own classes
                     if (type.contains("com.whatsapp") || type.contains("whatsapp")) {
@@ -108,11 +108,11 @@ val disableReadReceiptsPatch = bytecodePatch(
                                 )
                             }
                             hits++
-                            throw@phase2 Unit
+                            throw classDefForEach@ Exception("found")
                         }
                     }
                 }
-            } catch (e: @phase2 Exception) {
+            } catch (e: Exception) {
                 // Found it in phase 2, exit early
             }
         }
@@ -120,7 +120,7 @@ val disableReadReceiptsPatch = bytecodePatch(
         // Phase 3: Method name pattern scan — find methods with "Receipt"/"read" in name
         if (hits == 0) {
             try {
-                classDefForEach { classDef ->
+                classDefForEach2@ { classDef ->
                     val mutableClass = mutableClassDefBy(classDef)
                     for (method in mutableClass.methods) {
                         val name = method.name.lowercase()
@@ -149,11 +149,11 @@ val disableReadReceiptsPatch = bytecodePatch(
                                 )
                             }
                             hits++
-                            throw@phase3 Unit
+                            throw classDefForEach2@ Exception("found")
                         }
                     }
                 }
-            } catch (e: @phase3 Exception) {
+            } catch (e: Exception) {
                 // Found it in phase 3, exit early
             }
         }
