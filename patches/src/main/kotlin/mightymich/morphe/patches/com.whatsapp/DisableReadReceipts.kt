@@ -23,6 +23,8 @@ val disableReadReceiptsPatch = bytecodePatch(
     execute {
         val markers = listOf("read receipt", "read_receipt", "message_receipt", "receipt_type")
         var hits = 0
+
+        // Phase 1: Classic string-based search
         for (marker in markers) {
             val defs = try {
                 classDefByStrings(marker)
@@ -69,6 +71,90 @@ val disableReadReceiptsPatch = bytecodePatch(
             }
             if (hits > 0) break
         }
+
+        // Phase 2: Heuristic bytecode scan — search ALL classes for methods
+        // that contain "receipt" in their bytecode and return void
+        if (hits == 0) {
+            findInAllClasses@ classDefForEach { classDef ->
+                val type = classDef.type
+                // Skip obvious non-target classes
+                if (type.contains("com.whatsapp") || type.contains("whatsapp")) {
+                    for (method in classDef.methods) {
+                        if (method.returnType != "V") continue
+                        val impl = method.implementation ?: continue
+                        if (impl.instructions.count() > 100) continue
+                        val text = impl.instructions.joinToString("\n") { it.toString() }
+                        if (text.contains("receipt", ignoreCase = true)) {
+                            try {
+                                if (always != false) {
+                                    method.addInstructions(0, "return-void")
+                                } else {
+                                    method.addInstructions(
+                                        0,
+                                        """
+                                            const-string v0, "${ModPrefs.PREFS_NAME}"
+                                            const/4 v1, 0x0
+                                            invoke-virtual {p0, v0, v1}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+                                            move-result-object v0
+                                            const-string v1, "${ModPrefs.DISABLE_READ_RECEIPTS}"
+                                            const/4 v2, 0x0
+                                            invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+                                            move-result v0
+                                            if-eqz v0, :mm_send
+                                            return-void
+                                            :mm_send
+                                        """,
+                                    )
+                                }
+                                hits++
+                                break@findInAllClasses
+                            } catch (_: Exception) {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Phase 3: Method name pattern scan — find methods with "Receipt"/"read" in name
+        if (hits == 0) {
+            findInAllClasses2@ classDefForEach { classDef ->
+                for (method in classDef.methods) {
+                    val name = method.name.lowercase()
+                    if (name.contains("receipt") || name.contains("readreceipt") || name.contains("rdreceipt")) {
+                        if (method.returnType != "V") continue
+                        val impl = method.implementation ?: continue
+                        if (impl.instructions.count() > 100) continue
+                        try {
+                            if (always != false) {
+                                method.addInstructions(0, "return-void")
+                            } else {
+                                method.addInstructions(
+                                    0,
+                                    """
+                                        const-string v0, "${ModPrefs.PREFS_NAME}"
+                                        const/4 v1, 0x0
+                                        invoke-virtual {p0, v0, v1}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
+                                        move-result-object v0
+                                        const-string v1, "${ModPrefs.DISABLE_READ_RECEIPTS}"
+                                        const/4 v2, 0x0
+                                        invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z
+                                        move-result v0
+                                        if-eqz v0, :mm_send
+                                        return-void
+                                        :mm_send
+                                    """,
+                                )
+                            }
+                            hits++
+                            break@findInAllClasses2
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+            }
+        }
+
         if (hits == 0) {
             throw PatchException(
                 "WhatsApp: no read-receipt send sites matched. Re-derive for this APK version.",
