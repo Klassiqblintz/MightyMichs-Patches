@@ -76,7 +76,7 @@ val disableReadReceiptsPatch = bytecodePatch(
         // that contain "receipt" in their bytecode and return void
         if (hits == 0) {
             try {
-                classDefForEach@ { classDef ->
+                @phase2 classDefForEach { classDef: ClassDef ->
                     val type = classDef.type
                     // Only patch WhatsApp's own classes
                     if (type.contains("com.whatsapp") || type.contains("whatsapp")) {
@@ -108,11 +108,11 @@ val disableReadReceiptsPatch = bytecodePatch(
                                 )
                             }
                             hits++
-                            throw classDefForEach@ Exception("found")
+                            throw@phase2 Exception("found")
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: @phase2 Exception) {
                 // Found it in phase 2, exit early
             }
         }
@@ -120,7 +120,7 @@ val disableReadReceiptsPatch = bytecodePatch(
         // Phase 3: Method name pattern scan — find methods with "Receipt"/"read" in name
         if (hits == 0) {
             try {
-                classDefForEach2@ { classDef ->
+                @phase3 classDefForEach { classDef: ClassDef ->
                     val mutableClass = mutableClassDefBy(classDef)
                     for (method in mutableClass.methods) {
                         val name = method.name.lowercase()
@@ -149,11 +149,11 @@ val disableReadReceiptsPatch = bytecodePatch(
                                 )
                             }
                             hits++
-                            throw classDefForEach2@ Exception("found")
+                            throw@phase3 Exception("found")
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: @phase3 Exception) {
                 // Found it in phase 3, exit early
             }
         }
